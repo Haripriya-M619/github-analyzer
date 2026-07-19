@@ -41,9 +41,10 @@ Dashboard
 <div class="search-history">
 
 <input type="text"
+id="searchInput"
 placeholder="Search repository...">
 
-<button>
+<button id="searchBtn">
 
 <i class="fa-solid fa-magnifying-glass"></i>
 
@@ -55,8 +56,8 @@ Search
 
 <div class="history-table">
 
-<table>
-<thead></thead>
+<table id="historyTable">
+<thead>
 <tr>
 
 <th>Repository</th>
@@ -70,8 +71,8 @@ Search
 <th>Action</th>
 
 </tr>
-
 </thead>
+
 <tbody id="historyTableBody">
 
 </tbody>
@@ -109,6 +110,8 @@ Search
 </div>
 
 </div>
+
+<script src="history.js"></script>
 
 </body>
 

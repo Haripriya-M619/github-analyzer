@@ -7,7 +7,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>RepoAI Dashboard</title>
+<title>Repo AI Dashboard</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -59,7 +59,8 @@ onclick="window.location.href='profile.html'">
 Profile
 </li>
 
-<li>
+<!-- EDIT 1: added onclick="logout()" here -->
+<li onclick="logout()">
 <i class="fa-solid fa-right-from-bracket"></i>
 Logout
 </li>
@@ -207,11 +208,11 @@ Analyze Repository
 
 <tbody id="recentTable">
 <tr>
-<th>RepoAI</th>
+<td>RepoAI</td>
 
-<th>92%</th>
+<td>92%</td>
 
-<th>Excellent</th>
+<td>Excellent</td>
 
 </tr>
 </tbody>
@@ -223,6 +224,23 @@ Analyze Repository
 </div>
 
 </div>
+
+<!-- EDIT 2: new script block added here, BEFORE github.js -->
+<script type="module">
+  import { auth } from "./firebase.js";
+  import { signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+  window.logout = async function () {
+    try {
+      await signOut(auth);
+      window.location.href = "login.html";
+    } catch (error) {
+      console.error("Error logging out:", error);
+      alert("Something went wrong while logging out.");
+    }
+  };
+</script>
+
 <script src="github.js"></script>
 
 </body>

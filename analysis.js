@@ -23,50 +23,41 @@ function generateIntelligentAnalysis(repo) {
     const forks = repo.forks_count || 0;
     const issues = repo.open_issues_count || 0;
     const hasLicense = !!repo.license;
-    const hasReadme = repo.has_downloads; // approximation
     const languages = repo.allLanguages || repo.language || "Not specified";
     const topics = repo.topics || [];
     const isForked = repo.fork || false;
-    
+
     // Calculate health score based on multiple factors
     let score = 50;
-    
-    // Stars indicate popularity (0-15 points)
+
     if (stars > 10000) score += 15;
     else if (stars > 1000) score += 12;
     else if (stars > 100) score += 8;
     else if (stars > 10) score += 4;
-    
-    // Forks indicate utility (0-10 points)
+
     if (forks > 100) score += 10;
     else if (forks > 20) score += 7;
     else if (forks > 5) score += 4;
-    
-    // License presence (0-15 points)
+
     if (hasLicense) score += 15;
-    
-    // Issue management (0-10 points)
+
     if (issues < 20) score += 10;
     else if (issues < 50) score += 7;
     else if (issues < 100) score += 4;
     else if (issues > 200) score -= 5;
-    
-    // Additional factors (0-10 points)
+
     if (repo.description && repo.description.length > 50) score += 3;
     if (topics && topics.length > 0) score += 2;
     if (!isForked) score += 5;
-    
-    // Normalize score
+
     score = Math.max(0, Math.min(100, score));
-    
-    // Determine overall status
+
     let status = "Good";
     if (score >= 80) status = "Excellent";
     else if (score >= 60) status = "Good";
     else if (score >= 40) status = "Average";
     else status = "Needs Improvement";
-    
-    // Generate detailed analysis
+
     const analysis = `README_ANALYSIS: ${repo.description || 'No description available'}. The repository ${repo.has_wiki ? 'includes wiki documentation' : 'should include comprehensive documentation'}. Add setup instructions, usage examples, and API documentation for better clarity. Consider adding badges for build status and code coverage.
 
 PROJECT_STRUCTURE: The project is built with ${languages}. ${stars > 100 ? 'It has proven its utility with strong community adoption.' : 'As a smaller project, consider establishing clear architectural patterns.'} Structure appears ${forks > 20 ? 'well-organized with active community interest' : 'organized with clear purpose'}. Document your folder structure and provide guidelines for contributors.
@@ -116,13 +107,12 @@ REPO_STATUS: ${status}`;
 // Run AI Analysis
 async function runAIAnalysis() {
     const repo = JSON.parse(localStorage.getItem("repoData"));
-    
+
     if (!repo) {
         alert("No repository data found.");
         return;
     }
-    
-    // Show loading state
+
     const loadingBox = document.querySelector(".loading-box");
     if (loadingBox) {
         loadingBox.style.display = "flex";
@@ -130,10 +120,9 @@ async function runAIAnalysis() {
 
     try {
         console.log("Starting analysis for:", repo.name);
-        
-        // Try to fetch from backend server first
+
         let analysisText = null;
-        
+
         try {
             const response = await Promise.race([
                 fetch("http://localhost:3000/api/analyze", {
@@ -146,7 +135,7 @@ async function runAIAnalysis() {
                         repoData: repo
                     })
                 }),
-                new Promise((_, reject) => 
+                new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Server timeout')), 5000)
                 )
             ]);
@@ -155,23 +144,20 @@ async function runAIAnalysis() {
                 const result = await response.json();
                 if (result.success && result.analysis) {
                     analysisText = result.analysis;
-                    console.log('✓ Using server analysis');
+                    console.log('Using server analysis');
                 }
             }
         } catch (serverError) {
-            console.warn('⚠ Server not available, using intelligent analysis:', serverError.message);
+            console.warn('Server not available, using intelligent analysis:', serverError.message);
         }
-        
-        // Fallback: Use intelligent client-side analysis
+
         if (!analysisText) {
-            console.log('✓ Using client-side intelligent analysis');
+            console.log('Using client-side intelligent analysis');
             analysisText = generateIntelligentAnalysis(repo);
         }
-        
-        // Parse and display the analysis
+
         parseAndDisplayAnalysis(analysisText, repo);
-        
-        // Hide loading
+
         if (loadingBox) {
             loadingBox.style.display = "none";
         }
@@ -197,8 +183,7 @@ function parseAndDisplayAnalysis(analysisText, repo) {
         score: 75,
         status: "Good"
     };
-    
-    // Extract each section using regex
+
     const readmeMatch = analysisText.match(/README_ANALYSIS:\s*([^\n]*(?:\n(?!(?:PROJECT_STRUCTURE|MISSING_FILES|SECURITY|CODE_QUALITY|AI_SUGGESTIONS|HEALTH_SCORE|REPO_STATUS):)[^\n]*)*)/i);
     const structureMatch = analysisText.match(/PROJECT_STRUCTURE:\s*([^\n]*(?:\n(?!(?:README_ANALYSIS|MISSING_FILES|SECURITY|CODE_QUALITY|AI_SUGGESTIONS|HEALTH_SCORE|REPO_STATUS):)[^\n]*)*)/i);
     const missingMatch = analysisText.match(/MISSING_FILES:\s*([^\n]*(?:\n(?!(?:README_ANALYSIS|PROJECT_STRUCTURE|SECURITY|CODE_QUALITY|AI_SUGGESTIONS|HEALTH_SCORE|REPO_STATUS):)[^\n]*)*)/i);
@@ -207,8 +192,7 @@ function parseAndDisplayAnalysis(analysisText, repo) {
     const suggestionsMatch = analysisText.match(/AI_SUGGESTIONS:\s*([^\n]*(?:\n(?!(?:README_ANALYSIS|PROJECT_STRUCTURE|MISSING_FILES|SECURITY|CODE_QUALITY|HEALTH_SCORE|REPO_STATUS):)[^\n]*)*)/i);
     const scoreMatch = analysisText.match(/HEALTH_SCORE:\s*(\d+)/i);
     const statusMatch = analysisText.match(/REPO_STATUS:\s*([^\n]+)/i);
-    
-    // Extract text content
+
     if (readmeMatch) analysis.readme = readmeMatch[1].trim();
     if (structureMatch) analysis.structure = structureMatch[1].trim();
     if (missingMatch) analysis.missing = missingMatch[1].trim();
@@ -220,34 +204,29 @@ function parseAndDisplayAnalysis(analysisText, repo) {
     }
     if (scoreMatch) analysis.score = parseInt(scoreMatch[1]) || 75;
     if (statusMatch) analysis.status = statusMatch[1].trim();
-    
-    // Update UI with analysis data
+
     document.getElementById("readmeAnalysis").innerText = analysis.readme || "README analysis not available.";
     document.getElementById("projectStructure").innerText = analysis.structure || "Project structure analysis not available.";
     document.getElementById("missingFiles").innerText = analysis.missing || "No missing files identified.";
     document.getElementById("security").innerText = analysis.security || "Security analysis not available.";
     document.getElementById("codeQuality").innerText = analysis.quality || "Code quality analysis not available.";
-    
-    // Display health score with color coding
+
     const score = analysis.score || 75;
     const healthScoreElement = document.getElementById("healthScore");
     healthScoreElement.innerText = score + "%";
-    
-    // Add color based on score
+
     if (score >= 80) {
-        healthScoreElement.style.color = "#4CAF50"; // Green
+        healthScoreElement.style.color = "#4CAF50";
     } else if (score >= 60) {
-        healthScoreElement.style.color = "#FFC107"; // Orange
+        healthScoreElement.style.color = "#FFC107";
     } else {
-        healthScoreElement.style.color = "#F44336"; // Red
+        healthScoreElement.style.color = "#F44336";
     }
-    
-    // Display repository status with appropriate styling
+
     const status = analysis.status || "Good";
     const statusElement = document.getElementById("repoStatus");
     statusElement.innerText = status;
-    
-    // Set status class for styling
+
     const statusLower = status.toLowerCase();
     statusElement.className = "";
     if (statusLower.includes("excellent")) {
@@ -259,8 +238,7 @@ function parseAndDisplayAnalysis(analysisText, repo) {
     } else if (statusLower.includes("needs improvement")) {
         statusElement.className = "needs-improvement";
     }
-    
-    // Display AI suggestions
+
     const suggestionsList = document.getElementById("aiSuggestions");
     suggestionsList.innerHTML = "";
     if (analysis.suggestions.length > 0) {
@@ -274,6 +252,7 @@ function parseAndDisplayAnalysis(analysisText, repo) {
         li.innerText = "No suggestions available.";
         suggestionsList.appendChild(li);
     }
+
     const reportData = {
         repoName: repo.name,
         owner: repo.owner.login,
@@ -300,11 +279,18 @@ function parseAndDisplayAnalysis(analysisText, repo) {
     history.unshift(reportData);
 
     localStorage.setItem("history", JSON.stringify(history));
+
+    // Enable the "View Full Report" button now that reportData exists
+    const viewReportBtn = document.getElementById("viewReportBtn");
+    if (viewReportBtn) {
+        viewReportBtn.disabled = false;
+        viewReportBtn.style.opacity = "1";
+        viewReportBtn.style.cursor = "pointer";
+    }
 }
 
 window.runAIAnalysis = runAIAnalysis;
 
-// Hide loading box on page load
 window.addEventListener('DOMContentLoaded', function() {
     const loadingBox = document.querySelector(".loading-box");
     if (loadingBox) {

@@ -42,6 +42,20 @@ const name=document.getElementById("name").value.trim();
 
 const email=document.getElementById("email").value.trim();
 
+// Optional fields collected at signup so the profile page
+// has something to show right away instead of being empty.
+const githubUsername = document.getElementById("githubUsername")
+    ? document.getElementById("githubUsername").value.trim()
+    : "";
+
+const location = document.getElementById("location")
+    ? document.getElementById("location").value.trim()
+    : "";
+
+const bio = document.getElementById("bio")
+    ? document.getElementById("bio").value.trim()
+    : "";
+
 const password=document.getElementById("password").value;
 
 const confirm=document.getElementById("confirmPassword").value;
@@ -73,7 +87,11 @@ displayName:name
 await setDoc(doc(db,"users",userCredential.user.uid),{
 
 name:name,
-email:normalizedEmail
+email:normalizedEmail,
+githubUsername:githubUsername,
+location:location,
+bio:bio,
+photo:""
 
 });
 
@@ -124,7 +142,7 @@ loginForm.addEventListener("submit",async(e)=>{
 
 e.preventDefault();
 
-const email=document.getElementById("loginEmail").value;
+const email=document.getElementById("loginEmail").value.trim().toLowerCase();
 
 const password=document.getElementById("loginPassword").value;
 
@@ -132,18 +150,24 @@ try{
 
 await signInWithEmailAndPassword(auth,email,password);
 
-alert("Login Successful!");
-
 window.location.href="dashboard.html";
 
 }
 
 catch(error){
 
-    if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
+    console.log("Login error code:", error.code);
+
+    if (error.code === "auth/invalid-credential" ||
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/wrong-password") {
         alert("Invalid email or password.");
+    } else if (error.code === "auth/invalid-email") {
+        alert("Please enter a valid email address.");
+    } else if (error.code === "auth/too-many-requests") {
+        alert("Too many failed attempts. Please try again later.");
     } else {
-        alert(error.message);
+        alert("Error code: " + error.code + "\n\nMessage: " + error.message);
     }
 
 }
